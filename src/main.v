@@ -27,7 +27,7 @@ fn new_app() &App {
 	mut app := &App{}
 	// note: /assets/css and /assets/js as `mount_path` of mount_static_folder_at() must start with forward-slash (/)
 	// all *.css in assets_mount_path/css -> /assets/css
-	// all *.js in assets_mount_path/css -> /assets/css
+	// all *.js in assets_mount_path/js -> /assets/js
 	app.mount_static_folder_at(os.join_path(assets_mount_path, 'css'), '/assets/css')
 	app.mount_static_folder_at(os.join_path(assets_mount_path, 'js'), '/assets/js')
 	return app
