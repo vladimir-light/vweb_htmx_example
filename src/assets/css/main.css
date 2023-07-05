@@ -1,4 +1,11 @@
 h1.title {
-    font-family: Arial, Helvetica, sans-serif;
-    color: #3b7bbf;
-  }
+  font-family: Arial, Helvetica, sans-serif;
+  color: #3b7bbf;
+}
+
+.htmx-indicator {
+  opacity: 0;
+}
+.htmx-request.htmx-indicator {
+  opacity: 1;
+}

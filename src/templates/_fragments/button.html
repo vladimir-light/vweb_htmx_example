@@ -1,0 +1,15 @@
+<button
+  class="btn btn-primary"
+  hx-get="/delayed"
+  hx-trigger="click once"
+  hx-swap="outerHTML"
+  type="button"
+>
+  <span
+    class="spinner-border spinner-border-sm htmx-indicator visually-hidden"
+    role="status"
+    aria-hidden="true"
+
+  ></span>
+  <span>Loading...</span>
+</button>
