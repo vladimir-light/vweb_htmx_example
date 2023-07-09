@@ -1,38 +1,36 @@
 <!DOCTYPE html>
 <html>
-  @include '_includes/head'
+  <head>
+    @include '_layout/head'
+    @include '_layout/_partials/_twitter_bootstrap'
+    @include '_layout/_partials/_other_scripts'
+    @include '_layout/_partials/_other_styles'
+    <!-- devider  -->
+    @include '_layout/_partials/_main_styles'
+    @include '_layout/_partials/_main_scripts'
+  </head>
 
   <body>
-    <h1 class="title">Hello, Vs.</h1>
-    @for var in list_of_object
-    <div>
-      <a href="${v_url}">${var.title}</a>
-      <span>${var.description}</span>
-    </div>
-    @end
-
-    <!-- <div hx-get="/ticks" hx-trigger="every 5s">--:--:--</div> -->
-    <div>@include '_fragments/button'</div>
+    <h1 class="title">${page_title}</h1>
 
     <div>
       <button
-        hx-post="/greet"
+        hx-get="/greets/random"
         hx-trigger="click"
-        hx-target="#parent-div"
+        hx-target="#rand-name"
         hx-swap="innerHTML"
         class="btn btn-outline-secondary"
       >
-        Click Me!
+        Get random greeting
       </button>
     </div>
-    <div id="parent-div">nothing &hellip;</div>
 
-    <div x-cloak>Alpine cloak..</div>
+    <div id="rand-name">nothing &hellip;</div>
 
-    <div x-data="{ count: 0 }">
-      <button class="btn btn-outline-primary" x-on:click="count++">Increment</button>
+<!--     <div id="interval" hx-get="/ticks"  hx-trigger="every 2s" hx-target=".single-ticks"  hx-swap="innerHTML">
+        <div class="single-ticks"></div>
+    </div> -->
 
-      <span x-text="count"></span>
-    </div>
+    @include '_layout/footer'
   </body>
 </html>

@@ -4,6 +4,7 @@ import vweb
 import os
 import time
 
+
 pub struct TicksController {
 	vweb.Context
 }
@@ -14,23 +15,19 @@ const (
 )
 
 
-['/']
+['/'; get]
 pub fn (mut app TicksController) index_action() vweb.Result {
-	dump(@FN)
-	dump('${templates_dir}/ticks/index.html')
+	dump('Hello from ${@FN}')
+	ctx_time := time.now().format_ss()
 	page_greetings :='Hello from ${@FN}'
+	//page_title := 'ticks->index_action()'
 
 	return app.html($tmpl('../templates/ticks/index.html'))
 }
+['/:name'; get]
+pub fn (mut app TicksController) name_action(name string) vweb.Result {
+	dump('Hello from ${@FN}')
+	dump('Hello, ${name}! Nice to see you')
 
-['/ticks'; get]
-pub fn (mut app TicksController) ticks_action() vweb.Result {
-	dump(@FN)
-	dump(os.resource_abs_path('.'))
-
-	ctx_time := time.now().format_ss()
-	page_greetings :='Hello from ${@FN}'
-
-	//return app.html('<p>hello from ticks controller</p>')
-	return app.html($tmpl('../templates/ticks/ticks.html'))
+	return app.html('<h1>Hello, ${name}</h1>')
 }
