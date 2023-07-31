@@ -1,9 +1,12 @@
 module controllers
 import vweb
 import rand
+import db.sqlite
 
 pub struct GreetsController {
 	vweb.Context
+mut:
+	db sqlite.DB [vweb_global]
 }
 
 ['/']

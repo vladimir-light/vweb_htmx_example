@@ -1,18 +1,15 @@
 module controllers
 
 import vweb
-import os
 import time
+import db.sqlite
 
 
 pub struct TicksController {
 	vweb.Context
+mut:
+	db sqlite.DB [vweb_global]
 }
-
-const (
-	root_dir = os.join_path(os.resource_abs_path('.'), 'src')
-	templates_dir = os.join_path(root_dir, 'templates')
-)
 
 
 ['/'; get]

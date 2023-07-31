@@ -1,3 +1,7 @@
+data
+!data/.gitkeep
+
+
 # Binaries for programs and plugins
 main
 htmx_example

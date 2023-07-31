@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    @include '../_layout/head'
+    @include '../_layout/_partials/_twitter_bootstrap'
+    @include '../_layout/_partials/_other_scripts'
+    @include '../_layout/_partials/_other_styles'
+    <!-- devider  -->
+    @include '../_layout/_partials/_main_styles'
+    @include '../_layout/_partials/_main_scripts'
+</head>
+
+<body class="bg-body-tertiary">
+    <main class="container">
+        <div class="my-3 p-3 bg-body rounded shadow-sm">
+            <h6 class="border-bottom pb-2 mb-0">Predictions</h6>
+            @for _, prediction in found_preds
+            <div class="d-flex text-body-secondary pt-3">
+                @prediction.home_team_name() &ndash; @prediction.away_team_name()
+            </div>
+            @end
+        </div>
+    </main>
+</body>
+
+</html>
