@@ -32,8 +32,8 @@ fn init_predictions_no_orm(db sqlite.DB) ! {
 	db.exec_none('DELETE FROM `predictions`')
 
 	//3) create
-	// 3.1 - get list of all odd termas (randomly ordered)
-	// 3.2 - get list of all even termas (randomly ordered)
+	// 3.1 - get list of all odd teams (randomly ordered)
+	// 3.2 - get list of all even teams (randomly ordered)
 	// 3.3 - create prediction with a odd and even teams-id
 
 
@@ -52,14 +52,14 @@ fn init_predictions_no_orm(db sqlite.DB) ! {
 		odd_team := odd_teams_ids.pop()
 		away_team_id := odd_team.vals[0].int()
 
-		// quick and dirty..but also risky. no escaping, no pram/value binding... feels wrong!
+		// Quick and dirty...but also risky. No escaping, no param/value binding... feels wrong!
 		_ := db.exec_none("INSERT INTO `predictions` (`home_team_id`, `away_team_id`, `home_goals`, `away_goals`) VALUES(${home_team_id}, ${away_team_id}, ${rand.u8()}, ${rand.u8()})")
 	}
 }
 
 fn init_predictions_simplified(db sqlite.DB) ! {
 	// Simplified version of init_predictions
-	// We create only one prediction with specific team-ids
+	// We create only one prediction with specific team-ids, no loop over teams
 
 	sql db {
 		create table models.Prediction
@@ -71,14 +71,9 @@ fn init_predictions_simplified(db sqlite.DB) ! {
 		return error('not enough teams')
 	}
 
-	// remove all exsiting predictions
-	existing_preds := sql db {
-		select count from models.Prediction
-	} or { 0 }
+	// always remove all exsiting predictions, no need ti check if there are any..
+	db.exec_none('DELETE FROM `predictions`') // unfortunately there's no way to run this with sql db { delete from ... }
 
-	if existing_preds > 0 {
-		db.exec_none('DELETE FROM `predictions`')
-	}
 
 	// first Team
 	home_team := sql db {
@@ -217,7 +212,13 @@ fn init_teams(db sqlite.DB) ! {
 
 mut db := sqlite.connect(db_file_path) or { panic(err) }
 
-init_teams(db) or { panic(err) } // works as expected
-init_predictions_no_orm(db) or { panic(err) } // works... but feels kinda wrong
-// init_predictions_simplified(db) or { panic(err) } // fails... simple version with only one Predictions
+// INFO: In order to repdoruce porentia bug
+// 1) comment out all init_* functions but not init_teams().
+// 2) run in( v -d trace_db run fixtures.vsh ) `teams` table will be created and populated with data
+// 3) comment out all init_* functions but not
+
+
+//init_teams(db) or { panic(err) } // works as expected
+//init_predictions_no_orm(db) or { panic(err) } // works... but feels kinda wrong
+init_predictions_simplified(db) or { panic(err) } // fails... simple version with only one Predictions
 //init_predictions(db) or { panic(err) } // fails ... original version with a loop for all Teams

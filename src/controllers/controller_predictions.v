@@ -15,9 +15,8 @@ pub fn (mut app PredictionsController) index_action() vweb.Result {
 	page_title := 'Predictions'
 
 	found_preds := sql app.db {
-		select from models.Prediction
+		select from models.Prediction order by id desc
 	} or { []models.Prediction{} }
-
 
 
 	return app.html($tmpl('../templates/predictions/simple.html'))
