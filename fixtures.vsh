@@ -212,13 +212,15 @@ fn init_teams(db sqlite.DB) ! {
 
 mut db := sqlite.connect(db_file_path) or { panic(err) }
 
-// INFO: In order to repdoruce porentia bug
+// INFO: In order to repdoruce porential bug in ORM
 // 1) comment out all init_* functions but not init_teams().
-// 2) run in( v -d trace_db run fixtures.vsh ) `teams` table will be created and populated with data
-// 3) comment out all init_* functions but not
+// 2) run it ( v -d trace_db run fixtures.vsh ) `teams` table will be created and populated with data
+// 3) comment out all init_* functions but not init_predictions_no_orm()
+// 4) run it again. `predictions` table will be created and populated with data
+// 5) now, comment everything but not init_predictions_no_orm() and run it -> script panics with "V panic: db.sqlite.SQLError: UNIQUE constraint failed:" while trying to insert into `teams` instead of inserting into `predictions` table
 
 
-//init_teams(db) or { panic(err) } // works as expected
-//init_predictions_no_orm(db) or { panic(err) } // works... but feels kinda wrong
-init_predictions_simplified(db) or { panic(err) } // fails... simple version with only one Predictions
+init_teams(db) or { panic(err) } // works as expected
+init_predictions_no_orm(db) or { panic(err) } // works... but feels kinda wrong
+//init_predictions_simplified(db) or { panic(err) } // fails... simple version with only one Predictions
 //init_predictions(db) or { panic(err) } // fails ... original version with a loop for all Teams
