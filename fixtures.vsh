@@ -212,7 +212,7 @@ fn init_teams(db sqlite.DB) ! {
 
 mut db := sqlite.connect(db_file_path) or { panic(err) }
 
-// INFO: In order to repdoruce porential bug in ORM
+// INFO: In order to repdoruce potential bug in ORM
 // 1) comment out all init_* functions but not init_teams().
 // 2) run it ( v -d trace_db run fixtures.vsh ) `teams` table will be created and populated with data
 // 3) comment out all init_* functions but not init_predictions_no_orm()
