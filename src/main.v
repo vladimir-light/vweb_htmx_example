@@ -2,17 +2,24 @@ module main
 import vweb
 import os
 import controllers
+import db.sqlite
+
+
 
 const (
 	server_http_port  = 8081
 	server_host       = 'localhost'
 	assets_dir_name   = 'assets'
 	assets_mount_path = os.join_path(@VMODROOT, 'src', assets_dir_name) // assets_mount_path == ./src/assets
+	db_name = 'storage.db'
+	db_file_path = os.join_path(@VMODROOT, 'data', db_name)
 )
 
 struct App {
 	vweb.Context
 	vweb.Controller
+pub mut:
+	db sqlite.DB [vweb_global]
 }
 
 struct Object {
@@ -20,8 +27,8 @@ struct Object {
 	description string
 }
 
+
 fn main() {
-	dump(assets_mount_path)
 	vweb.run_at(new_app(), vweb.RunParams{
 		host: server_host
 		port: server_http_port
@@ -29,11 +36,21 @@ fn main() {
 	}) or { panic(err) }
 }
 
+fn db_conn(db_file string) !sqlite.DB {
+	return sqlite.connect(db_file)!
+}
+
 fn new_app() &App {
+	mut db := db_conn(db_file_path) or { panic(err) }
+	db.synchronization_mode(sqlite.SyncMode.off) or { panic(err) }
+	db.journal_mode(sqlite.JournalMode.memory) or { panic(err) }
+
 	mut app := &App{
+		db: db
 		controllers: [
-			vweb.controller('/greets', &controllers.GreetsController{})
-			vweb.controller('/ticks', &controllers.TicksController{})
+			vweb.controller('/greets', &controllers.GreetsController{db: db})
+			vweb.controller('/ticks', &controllers.TicksController{db: db})
+			vweb.controller('/predictions', &controllers.PredictionsController{db: db})
 		]
 	}
 	// note: /assets/css and /assets/js as `mount_path` of mount_static_folder_at() must start with forward-slash (/)

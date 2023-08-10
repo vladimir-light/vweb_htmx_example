@@ -10,26 +10,29 @@ const (
 	db_file_path = join_path(@VMODROOT, 'data', db_name)
 )
 
-fn init_predictions_no_orm(db sqlite.DB) ! {
-	// still the quickes way to create table if not exists
+
+
+fn init_tables(db sqlite.DB) ! {
 	sql db {
-		create table models.Prediction
-	}!
+			create table models.Team
+			create table models.Prediction
+		}!
+}
 
-
+fn init_predictions(db sqlite.DB) ! {
 	//1) check if there enough teams
 	//2) check if there any existing predictions. if so, remove
 	//3) create predictions with random teams
 
 	//1)
-	found_teams :=db.q_int("SELECT COUNT(*) FROM `teams`")
+	found_teams := db.q_int("SELECT COUNT(*) FROM `teams`")!
 	if found_teams < 2
 	{
 		panic('Not enought teams...')
 	}
 
 	// 2) just delete everytime.
-	db.exec_none('DELETE FROM `predictions`')
+	_ := db.exec_none('DELETE FROM `predictions`')
 
 	//3) create
 	// 3.1 - get list of all odd teams (randomly ordered)
@@ -38,8 +41,8 @@ fn init_predictions_no_orm(db sqlite.DB) ! {
 
 
 	// 3.1 and 3.2
-	mut even_teams_ids, _ := db.exec('SELECT id FROM `teams` WHERE (id&1)=0 ORDER BY RANDOM()')
-	mut odd_teams_ids, _ := db.exec('SELECT id FROM `teams` WHERE (id&1)<>0 ORDER BY RANDOM()')
+	mut even_teams_ids:= db.exec('SELECT id FROM `teams` WHERE (id&1)=0 ORDER BY RANDOM()')!
+	mut odd_teams_ids:= db.exec('SELECT id FROM `teams` WHERE (id&1)<>0 ORDER BY RANDOM()')!
 	//
 	for {
 		if even_teams_ids.len < 1 || odd_teams_ids.len < 1 {
@@ -52,127 +55,16 @@ fn init_predictions_no_orm(db sqlite.DB) ! {
 		odd_team := odd_teams_ids.pop()
 		away_team_id := odd_team.vals[0].int()
 
-		// Quick and dirty...but also risky. No escaping, no param/value binding... feels wrong!
-		_ := db.exec_none("INSERT INTO `predictions` (`home_team_id`, `away_team_id`, `home_goals`, `away_goals`) VALUES(${home_team_id}, ${away_team_id}, ${rand.u8()}, ${rand.u8()})")
-	}
-}
-
-fn init_predictions_simplified(db sqlite.DB) ! {
-	// Simplified version of init_predictions
-	// We create only one prediction with specific team-ids, no loop over teams
-
-	sql db {
-		create table models.Prediction
-	}!
-
-	// if there's no teams -> abbort!
-	found_teams := db.q_int('SELECT COUNT(*) FROM `teams`')
-	if found_teams < 2 {
-		return error('not enough teams')
-	}
-
-	// always remove all exsiting predictions, no need ti check if there are any..
-	db.exec_none('DELETE FROM `predictions`') // unfortunately there's no way to run this with sql db { delete from ... }
-
-
-	// first Team
-	home_team := sql db {
-		select from models.Team where id == 2
-	}!
-	// second Team
-	away_team	 := sql db {
-		select from models.Team where id == 7
-	}!
-
-	//dump(home_team.first())
-	//dump(away_team.first())
-
-	// new Prediction with two Teams from obove and a random number for goals
-	new_pred := models.Prediction{
-		home_team: home_team.first()
-		away_team: away_team.first()
-		home_goals: rand.u8()
-		away_goals: rand.u8()
-	}
-
-	// expected query here is `insert into "predictions" (id, home_team_id, away_team_id, home_goals, away_goals, created_at, updated_at) VALUES ( ... )`
-	// but instead an `insert into "teams"` triggered...
-	sql db {
-		insert new_pred into models.Prediction
-	}!
-}
-
-fn init_predictions(db sqlite.DB) ! {
-	sql db {
-		create table models.Prediction
-	}!
-
-	// if there's no teams -> abbort!
-	found_teams := db.q_int('SELECT COUNT(*) FROM `teams`')
-	if found_teams < 2 {
-		return error('not enough teams')
-	}
-
-	// remove all exsiting predictions
-	existing_preds := sql db {
-		select count from models.Prediction
-	} or { 0 }
-
-	if existing_preds > 0 {
-		db.exec_none('DELETE FROM `predictions`')
-	}
-
-	// so there are 14 teams and we want to create 7 random predicitons. In order to do that, we take all even and all odd teams randomly ordered and use them.
-	// WHERE (id&1)=0 ORDER BY RAND helps to select only even teams.
-	// unfortunately (id&1)= isn't possible with current state of ORM
-	// odd_teams := sql db { select from Team where (id&1) == 0 order by name }!
-	mut even_teams_ids, _ := db.exec('SELECT id FROM `teams` WHERE (id&1)=0 ORDER BY RANDOM()')
-	mut odd_teams_ids, _ := db.exec('SELECT id FROM `teams` WHERE (id&1)<>0 ORDER BY RANDOM()')
-
-
-	for {
-		if even_teams_ids.len < 1 || odd_teams_ids.len < 1 {
-			break
-		}
-
-		// get IDs to make a SELECT with ORM in order to get
-		// first id of even teams
-		h_team_row := even_teams_ids.pop()
-		h_team_id := h_team_row.vals[0].int()
-
-		// first ID of odd teams
-		a_team_row := odd_teams_ids.pop()
-		a_team_id := a_team_row.vals[0].int()
-
-		home_team := sql db {
-			select from models.Team where id == h_team_id limit 1
-		}!
-
-		away_team := sql db {
-			select from models.Team where id == a_team_id limit 1
-		}!
-
-		dump(home_team.first())
-		dump(away_team.first())
-
-		new_pred := models.Prediction{
-			home_team: home_team.first()
-			away_team: away_team.first()
-			home_goals: rand.u8()
-			away_goals: rand.u8()
-		}
-
-		sql db {
-			insert new_pred into models.Prediction
-		}!
+		_ := db.exec_param_many("INSERT INTO `predictions` (`home_team_id`, `away_team_id`, `home_goals`, `away_goals`) VALUES(?, ?, ?, ?)", [
+			home_team_id.str(),
+			away_team_id.str(),
+			rand.u8().str(),
+			rand.u8().str()
+		])!
 	}
 }
 
 fn init_teams(db sqlite.DB) ! {
-	sql db {
-		create table models.Team
-	}!
-
 	found_teams := sql db {
 		select count from models.Team
 	}!
@@ -212,15 +104,6 @@ fn init_teams(db sqlite.DB) ! {
 
 mut db := sqlite.connect(db_file_path) or { panic(err) }
 
-// INFO: In order to repdoruce potential bug in ORM
-// 1) comment out all init_* functions but not init_teams().
-// 2) run it ( v -d trace_db run fixtures.vsh ) `teams` table will be created and populated with data
-// 3) comment out all init_* functions but not init_predictions_no_orm()
-// 4) run it again. `predictions` table will be created and populated with data
-// 5) now, comment everything but not init_predictions_no_orm() and run it -> script panics with "V panic: db.sqlite.SQLError: UNIQUE constraint failed:" while trying to insert into `teams` instead of inserting into `predictions` table
-
-
+init_tables(db) or { panic(err) }
 init_teams(db) or { panic(err) } // works as expected
-init_predictions_no_orm(db) or { panic(err) } // works... but feels kinda wrong
-//init_predictions_simplified(db) or { panic(err) } // fails... simple version with only one Predictions
-//init_predictions(db) or { panic(err) } // fails ... original version with a loop for all Teams
+init_predictions(db) or { panic(err) } // works... but feels kinda wrong
